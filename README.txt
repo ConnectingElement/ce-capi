@@ -15,7 +15,17 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.2
+* Admin styling improvements
+* Added admin notice if config is not complete
+
+= 1.0.1
+* Automatic updates added
+
 = 1.0.0 =
 * Initial release
 
+== Upgrade Notice ==
 
+= 1.0.1 =
+* Automatic updates added

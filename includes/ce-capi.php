@@ -163,6 +163,29 @@ class CE_CAPI {
         
         // validation hook
         $this->loader->add_action('admin_init', $plugin_admin, 'options_update');
+        
+        // config setup hook, if config isnt right
+        if (!$this->options_valid()) {
+            $this->loader->add_action('admin_notices', $plugin_admin, 'admin_notice');
+        }
+	}
+    
+    /**
+     * Check the plugin is configured properly
+     * 
+     * @since   1.0.2
+     * @access  protected
+     * @return boolean True if valid, false if not
+     */
+    protected function options_valid()
+    {
+        $options = get_option($this->plugin_name);
+        if (!is_array($options)) return false;
+        
+        if (!array_key_exists('api_key', $options) || !$options['username']) return false;
+        if (!array_key_exists('api_ksecret', $options) || !$options['password']) return false;
+        
+        return true;
 	}
 
 	/**

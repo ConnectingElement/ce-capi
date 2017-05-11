@@ -16,7 +16,7 @@
  * Plugin Name:       CE CAPI
  * Plugin URI:        https://wp-plugins.ce-admin.co.uk/ce-capi
  * Description:       Connecting Element Content API integration for Wordpress
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Connecting Element
  * Author URI:        http://www.connectingelement.co.uk
  * Text Domain:       ce-capi
@@ -70,3 +70,19 @@ function run_ce_capi() {
 
 }
 run_ce_capi();
+
+/*
+	Plugin Name: Smashing Plugin
+	Description: This is for updating your Wordpress plugin.
+	Version: 1.0.0
+	Author: Matthew Ray
+	Author URI: http://www.matthewray.com
+*/
+if (!class_exists('Smashing_Updater')){
+	include_once( plugin_dir_path( __FILE__ ) . '/classes/SmashingUpdater.php');
+}
+$updater = new Smashing_Updater(__FILE__);
+$updater->set_username('ConnectingElement');
+$updater->set_repository('wp-capi');
+//$updater->authorize( 'abcdefghijk1234567890' ); // Your auth code goes here for private repos
+$updater->initialize();

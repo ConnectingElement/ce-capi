@@ -23,24 +23,35 @@
             settings_fields($this->plugin_name); 
             $options = get_option($this->plugin_name);
         ?>
-        <!-- API key -->
-        <fieldset>
-            <legend class="screen-reader-text"><span>API Key</span></legend>
-            <label for="<?php echo $this->plugin_name; ?>-api_key">
-                <span><?php esc_attr_e('API Key', $this->plugin_name); ?></span>
-            </label>
-            <input type="text" id="<?php echo $this->plugin_name; ?>-api_key" name="<?php echo $this->plugin_name; ?>[api_key]" value="<?php print($options['api_key']); ?>"  class="regular-text"/>
-        </fieldset>
         
-        <!-- API secret -->
-        <fieldset>
-            <legend class="screen-reader-text"><span>API Secret</span></legend>
-            <label for="<?php echo $this->plugin_name; ?>-api_secret">
-                <span><?php esc_attr_e('API Secret', $this->plugin_name); ?></span>
-            </label>
-            <input type="text" id="<?php echo $this->plugin_name; ?>-api_secret" name="<?php echo $this->plugin_name; ?>[api_secret]" value="<?php print($options['api_secret']); ?>"  class="regular-text"/>
-        </fieldset>
-        
+        <table class="form-table">
+            <tbody>
+                <!-- API key -->
+                <tr>
+                    <th scope="row">
+                        <legend class="screen-reader-text"><span>API Key</span></legend>
+                        <label for="<?php echo $this->plugin_name; ?>-api_key">
+                            <span><?php esc_attr_e('API Key', $this->plugin_name); ?></span>
+                        </label>
+                    </th>
+                    <td>
+                        <input type="text" id="<?php echo $this->plugin_name; ?>-api_key" name="<?php echo $this->plugin_name; ?>[api_key]" value="<?php print($options['api_key']); ?>"  class="regular-text"/>
+                    </td>
+                </tr>
+                <!-- API secret -->
+                <tr>
+                    <th scope="row">
+                        <legend class="screen-reader-text"><span>API Secret</span></legend>
+                        <label for="<?php echo $this->plugin_name; ?>-api_secret">
+                            <span><?php esc_attr_e('API Secret', $this->plugin_name); ?></span>
+                        </label>
+                    </th>
+                    <td>
+                        <input type="text" id="<?php echo $this->plugin_name; ?>-api_secret" name="<?php echo $this->plugin_name; ?>[api_secret]" value="<?php print($options['api_secret']); ?>"  class="regular-text"/>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
         <?php submit_button('Save all changes', 'primary','submit', TRUE); ?>
 

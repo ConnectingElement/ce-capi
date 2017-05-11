@@ -134,6 +134,19 @@ class CE_CAPI_Admin {
        return array_merge($settings_link, $links);
 
     }
+    
+    /**
+     * Output a notice for incomplete configuration
+     * 
+     * @since 1.0.2
+     */
+    public function admin_notice()
+    {
+        printf('<div class="error notice">
+                    <p>The <a href="%s">%s plugin configuration</a> has not been completed yet.</p>
+                </div>',
+                menu_page_url($this->plugin_name, false), $this->plugin_name);
+    }
 
    /**
     * Render the settings page for this plugin.
