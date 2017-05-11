@@ -182,8 +182,8 @@ class CE_CAPI {
         $options = get_option($this->plugin_name);
         if (!is_array($options)) return false;
         
-        if (!array_key_exists('api_key', $options) || !$options['username']) return false;
-        if (!array_key_exists('api_ksecret', $options) || !$options['password']) return false;
+        if (!array_key_exists('api_key', $options) || !$options['api_key']) return false;
+        if (!array_key_exists('api_secret', $options) || !$options['api_secret']) return false;
         
         return true;
 	}
