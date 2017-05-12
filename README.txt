@@ -15,6 +15,9 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.5 =
+* Fixed the uninstall script to remove the ce-capi options
+
 = 1.0.4 =
 * Move the settings page to the top level menu instead of hidden as a submenu under settings
 
