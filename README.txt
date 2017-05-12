@@ -15,6 +15,9 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.4 =
+* Move the settings page to the top level menu instead of hidden as a submenu under settings
+
 = 1.0.3
 * Admin fixes
 
@@ -28,7 +31,3 @@ This section describes how to install the plugin and get it working.
 = 1.0.0 =
 * Initial release
 
-== Upgrade Notice ==
-
-= 1.0.1 =
-* Automatic updates added

@@ -14,9 +14,9 @@
  *
  * @wordpress-plugin
  * Plugin Name:       CE CAPI
- * Plugin URI:        https://wp-plugins.ce-admin.co.uk/ce-capi
+ * Plugin URI:        https://github.com/ConnectingElement/wp-capi
  * Description:       Connecting Element Content API integration for Wordpress
- * Version:           1.0.3
+ * Version:           1.0.4
  * Author:            Connecting Element
  * Author URI:        http://www.connectingelement.co.uk
  * Text Domain:       ce-capi

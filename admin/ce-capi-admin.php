@@ -115,7 +115,7 @@ class CE_CAPI_Admin {
          *        Administration Menus: http://codex.wordpress.org/Administration_Menus
          *
          */
-        add_options_page('CE CAPI Integration Settings', 'CE CAPI', 'manage_options', $this->plugin_name, [$this, 'display_plugin_setup_page']);
+        add_menu_page('CE CAPI Integration Settings', 'CE CAPI', 'manage_options', $this->plugin_name, [$this, 'display_plugin_setup_page'], 'dashicons-media-document', 41.1);
     }
 
     /**
