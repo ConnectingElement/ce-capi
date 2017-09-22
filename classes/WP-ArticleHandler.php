@@ -292,8 +292,9 @@ class ArticleHandler
                 'post_content'  => $payload->data['content'],
                 'post_status'   => 'publish'
             ]);
+            $post = get_post($articleID);
             
-            if (is_int($articleID)){
+            if (is_int($articleID) || !$post){
                 // add meta
                 if (!add_post_meta($articleID, self::REFERENCE_META_KEY, $articleReference)) {
                     $responsePayload->addError(new Error(0x12, 'Could not add article', 'Reference meta data could not be added'))->setStatus(500);
@@ -322,8 +323,13 @@ class ArticleHandler
             $wpdb->query('COMMIT');
             if ($master){
                 // we're the master, send back all the ids
+                
+                // we have to trick wordpress into giving us the friendly url on a future post for some reason
+                $post->post_status = 'publish';
+                $permalink = get_permalink($post);
+                
                 $responsePayload->addData([
-                    'url'       => get_permalink($articleID),
+                    'url'       => $permalink,
                     'master'    => [
                         'id'           => $articleID, 
                         'imageid'      => $attachmentID,
