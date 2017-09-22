@@ -8,6 +8,45 @@ class ArticleHandler
 {
     const REFERENCE_META_KEY = '_ce-capi_reference';
     
+    /**
+     * Adds the given image to the specified post
+     * 
+     * @param int $postID The ID of the post to add the image to
+     * @param string $imageURL The URL of the image to add
+     * @return boolean Whether the addition was successful
+     */
+    public static function addPostImage($postID, $imageURL)
+    {
+        // download the image
+        if ($imagePath = self::downloadFile($imageURL)) {
+            // add the file to the database
+            $filename = basename($imagePath);
+            $wp_filetype = wp_check_filetype($filename, null);
+            $attachment = array(
+                'post_mime_type'    => $wp_filetype['type'],
+                'post_title'        => sanitize_file_name($filename),
+                'post_content'      => '',
+                'post_status'       => 'inherit'
+            );
+            require_once(ABSPATH . 'wp-admin/includes/image.php');
+            $attachmentID   = wp_insert_attachment($attachment, $imagePath, $postID);
+            $attachmentData = wp_generate_attachment_metadata($attachmentID, $imagePath);
+            if ($result = wp_update_attachment_metadata($attachmentID, $attachmentData)) {
+                return $attachmentID;
+            } else {
+                return $result;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Deletes one or more articles from this endpoint
+     * 
+     * @global wpdb $wpdb Wordpress database object
+     * @param \ContentAPI\Payload $payload The payload received
+     * @param \ContentAPI\Message $response The message to add responses to
+     */
     public function delete(Payload $payload, Message $response)
     {
         global $wpdb;
@@ -42,16 +81,72 @@ class ArticleHandler
         $response->addPayload($responsePayload);
     }
     
-    public function get($payload, $response)
+    /**
+     * Downloads the specified file
+     * 
+     * @param string $url The URL of the file to download
+     * @param int|null $time A timestamp used to determine the wordpress directory to write to
+     * @param string|null $saveFilename The filename to save as locally (or false to use filename from URL)
+     * @return string|bool The local path to the image if successful, else false
+     */
+    public static function downloadFile($url, $time = null, $saveFilename = false)
     {
-        
+        $ch             = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response       = curl_exec($ch);
+        $responseCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        if ($responseCode === 200) {
+            // write it to a file
+            if ($time !== null) {
+                $time = date('Y/m', $time);
+            }
+            if (is_string($saveFilename) && $saveFilename) {
+                $imagePath = $saveFilename;
+            } else {
+                $upload_dir     = wp_upload_dir($time, true);           
+                if ($upload_dir['path']) {
+                    $imagePath = $upload_dir['path'];
+                } else {
+                    return false;
+                }
+                $imagePath .= '/' . wp_unique_filename($imagePath, basename($url));
+            }
+            if (file_put_contents($imagePath, $response)) {
+                return $imagePath;
+            }
+        } else {
+            error_log(sprintf('CE-CAPI: Got response code %d when trying to fetch %s', $responseCode, $url));
+        }
+        return false;
     }
     
+    /**
+     * Placeholder function for retrievals, may be used in future
+     * 
+     * @param \ContentAPI\Payload $payload The payload received
+     * @param \ContentAPI\Message $response The message to add responses to
+     */
+    public function get($payload, $response) {}
+    
+    /**
+     * Retrieve an article by its identifier
+     * 
+     * @param int $id The ID of the article to find
+     * @return WP_Post|array|null The post found
+     */
     public static function getArticlesByID($id)
     {
         return get_post($id);
     }
     
+    /**
+     * Retrieves an article by its reference string
+     * 
+     * @param string $reference The reference to search for
+     * @return array|bool An associative array containing a post if found, else false
+     */
     public static function getArticlesByReference($reference)
     {
         $args = [
@@ -70,6 +165,12 @@ class ArticleHandler
          return false;
     }
     
+    /**
+     * Retrieves articles by seo friendly name
+     * 
+     * @param string $seoFriendlyName The string to search for
+     * @return array|null The posts found
+     */
     public static function getArticlesBySeoFriendlyName($seoFriendlyName)
     {
         return get_posts([
@@ -80,6 +181,13 @@ class ArticleHandler
         ]);
     }   
     
+    /**
+     * Updates one or more articles at this endpoint
+     * 
+     * @global wpdb $wpdb Wordpress database object
+     * @param \ContentAPI\Payload $payload The payload received
+     * @param \ContentAPI\Message $response The message to add responses to
+     */
     public function patch(Payload $payload, Message $response)
     {
         global $wpdb;
@@ -123,64 +231,14 @@ class ArticleHandler
         $response->addPayload($responsePayload);
     }
     
-    public static function downloadFile($url, $time = null, $saveFilename = false)
-    {
-        $ch             = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response       = curl_exec($ch);
-        $responseCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        if ($responseCode === 200) {
-            // write it to a file
-            if ($time !== null) {
-                $time = date('Y/m', $time);
-            }
-            if (is_string($saveFilename) && $saveFilename) {
-                $imagePath = $saveFilename;
-            } else {
-                $upload_dir     = wp_upload_dir($time, true);           
-                if ($upload_dir['path']) {
-                    $imagePath = $upload_dir['path'];
-                } else {
-                    return false;
-                }
-                $imagePath .= '/' . wp_unique_filename($imagePath, basename($url));
-            }
-            if (file_put_contents($imagePath, $response)) {
-                return $imagePath;
-            }
-        } else {
-            error_log(sprintf('CE-CAPI: Got response code %d when trying to fetch %s', $responseCode, $url));
-        }
-        return false;
-    }
-    
-    public static function addPostImage($postID, $imageURL)
-    {
-        // download the image
-        if ($imagePath = self::downloadFile($imageURL)) {
-            // add the file to the database
-            $filename = basename($imagePath);
-            $wp_filetype = wp_check_filetype($filename, null);
-            $attachment = array(
-                'post_mime_type'    => $wp_filetype['type'],
-                'post_title'        => sanitize_file_name($filename),
-                'post_content'      => '',
-                'post_status'       => 'inherit'
-            );
-            require_once(ABSPATH . 'wp-admin/includes/image.php');
-            $attachmentID   = wp_insert_attachment($attachment, $imagePath, $postID);
-            $attachmentData = wp_generate_attachment_metadata($attachmentID, $imagePath);
-            if ($result = wp_update_attachment_metadata($attachmentID, $attachmentData)) {
-                return $attachmentID;
-            } else {
-                return $result;
-            }
-        }
-        return false;
-    }
-    
+    /**
+     * Inserts one or more articles at this endpoint
+     * 
+     * @global wpdb $wpdb Wordpress database object
+     * @param \ContentAPI\Payload $payload The payload received
+     * @param \ContentAPI\Message $response The message to add responses to
+     * @return \ContentAPI\Message The response
+     */
     public function post(Payload $payload, Message $response)
     {
         global $wpdb;
@@ -280,6 +338,13 @@ class ArticleHandler
         return $response;
     }
     
+    /**
+     * Associates a post with an image
+     * 
+     * @param int $postID The ID of the post
+     * @param int $attachmentID The ID of the image attachement
+     * @return bool True on success, false on failure.
+     */
     public static function setPostImage($postID, $attachmentID) 
     {
         $result = set_post_thumbnail($postID, $attachmentID);
@@ -287,6 +352,12 @@ class ArticleHandler
         return $result;
     }
     
+    /**
+     * Validates the given payload
+     * 
+     * @param \ContentAPI\Payload $payload The payload to validate
+     * @param \ContentAPI\Payload $responsePayload The response payload to add any errors to
+     */
     public function validatePayload(Payload $payload, Payload &$responsePayload)
     {
         // check data given
