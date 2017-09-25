@@ -15,6 +15,9 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.7 =
+* Updated the updater to mitigate some problems caused by update check failures
+
 = 1.0.6 =
 * Updated the endpoint to send back the post slug to use for article links instead of the ?p=1 version
 
