@@ -39,7 +39,7 @@ class ArticleHandler
         }
         return false;
     }
-    
+
     /**
      * Deletes one or more articles from this endpoint
      * 
@@ -220,6 +220,16 @@ class ArticleHandler
                 $responsePayload->addError(new Error(0x24, 'Could not update image', sprintf('The existing file at %s could not be overwritten', $filename)))->setStatus(500);
             }
         }
+
+        if (!$responsePayload->getErrors()){
+            $tags = [];
+            if (array_key_exists('tags', $payload->data)) {
+                foreach ($payload->data['tags'] as $tag) {
+                    $tags[] = $tag['name'];
+                }
+            }
+            wp_set_post_tags($articleID, $tags, false);
+        }
         
         // action
         if ($responsePayload->getErrors()){  
@@ -248,7 +258,6 @@ class ArticleHandler
         // reference
         $articleReference = $payload->identifier;
         $articles = static::getArticlesByReference($articleReference);
-        error_log('Articles by reference = ' . var_export($articles, true));
         if($articles){
             // already exist!
             $responsePayload->addError(new Error(0x1A, 'Article reference already exists'))->setStatus(400);
@@ -315,6 +324,15 @@ class ArticleHandler
                 $responsePayload->addError(new Error(0x14, 'Could not insert image for article'))->setStatus(500);
             }
         }
+
+        // add tags
+        if (!$responsePayload->getErrors() && count($payload->data['tags']) > 0) {
+            $tags = [];
+            foreach ($payload->data['tags'] as $tag) {
+                $tags[] = $tag['name'];
+            }
+            wp_set_post_tags($articleID, $tags);
+        }
         
         // action
         if ($responsePayload->getErrors()){  
@@ -354,7 +372,7 @@ class ArticleHandler
     public static function setPostImage($postID, $attachmentID) 
     {
         $result = set_post_thumbnail($postID, $attachmentID);
-        error_log(sprintf('Attempting to set attachment %s as post thumbnail for post %s resulted in %s', $attachmentID, $postID, var_export($result, true)));
+        //error_log(sprintf('Attempting to set attachment %s as post thumbnail for post %s resulted in %s', $attachmentID, $postID, var_export($result, true)));
         return $result;
     }
     

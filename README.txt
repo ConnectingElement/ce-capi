@@ -15,6 +15,9 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.8 =
+* Added article tag handling
+
 = 1.0.7 =
 * Updated the updater to mitigate some problems caused by update check failures
 
