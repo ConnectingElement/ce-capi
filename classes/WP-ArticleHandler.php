@@ -31,11 +31,7 @@ class ArticleHandler
             require_once(ABSPATH . 'wp-admin/includes/image.php');
             $attachmentID   = wp_insert_attachment($attachment, $imagePath, $postID);
             $attachmentData = wp_generate_attachment_metadata($attachmentID, $imagePath);
-            if ($result = wp_update_attachment_metadata($attachmentID, $attachmentData)) {
-                return $attachmentID;
-            } else {
-                return $result;
-            }
+            return $attachmentID;
         }
         return false;
     }
@@ -326,7 +322,7 @@ class ArticleHandler
         }
 
         // add tags
-        if (!$responsePayload->getErrors() && count($payload->data['tags']) > 0) {
+        if (!$responsePayload->getErrors() && array_key_exists('tags', $payload->data) && count($payload->data['tags']) > 0) {
             $tags = [];
             foreach ($payload->data['tags'] as $tag) {
                 $tags[] = $tag['name'];
