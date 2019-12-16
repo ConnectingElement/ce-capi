@@ -15,6 +15,9 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.10 =
+* Version update for the plugin auto-updater
+
 = 1.0.9 =
 * Updated the image insertion so that it works properly in WordPress 5.3+
 
