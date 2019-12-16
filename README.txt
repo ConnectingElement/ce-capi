@@ -15,6 +15,9 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.9 =
+* Updated the image insertion so that it works properly in WordPress 5.3+
+
 = 1.0.8 =
 * Added article tag handling
 
