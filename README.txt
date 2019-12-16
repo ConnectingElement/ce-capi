@@ -15,6 +15,9 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.11 =
+* Version bump for the WordPress 5.3 compatibility changes and auto updates
+
 = 1.0.10 =
 * Version update for the plugin auto-updater
 
