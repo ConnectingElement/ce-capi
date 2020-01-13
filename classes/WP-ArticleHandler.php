@@ -31,6 +31,7 @@ class ArticleHandler
             require_once(ABSPATH . 'wp-admin/includes/image.php');
             $attachmentID   = wp_insert_attachment($attachment, $imagePath, $postID);
             $attachmentData = wp_generate_attachment_metadata($attachmentID, $imagePath);
+            wp_update_attachment_metadata($attachmentID, $attachmentData);
             return $attachmentID;
         }
         return false;
@@ -212,7 +213,11 @@ class ArticleHandler
         if (!$responsePayload->getErrors()){
             $filename = get_attached_file($payload->data['master']['imageid']);
             $filePath = self::downloadFile($payload->data['image']['src'], $payload->data['master']['created_at'], $filename);
-            if (!$filePath) {
+            if ($filePath) {
+                require_once(ABSPATH . 'wp-admin/includes/image.php');
+                $attachmentData = wp_generate_attachment_metadata($payload->data['master']['imageid'], $filePath);
+                wp_update_attachment_metadata($payload->data['master']['imageid'], $attachmentData);
+            } else {
                 $responsePayload->addError(new Error(0x24, 'Could not update image', sprintf('The existing file at %s could not be overwritten', $filename)))->setStatus(500);
             }
         }
