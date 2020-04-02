@@ -15,6 +15,9 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.13 =
+* Update the endpoint search to include posts that are not in a published state
+
 = 1.0.12 =
 * Fixing a thumbnail generation issue for WordPress versions prior to 5.3
 * Updating post meta data / regenerating thumbnails when updating images

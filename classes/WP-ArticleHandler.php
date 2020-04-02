@@ -153,10 +153,11 @@ class ArticleHandler
                     'value' => $reference,
                     'compare' => '='
                 ]
-            ]
+            ],
+            'post_status' => 'any'
          ];
          $query = new \WP_Query($args);
-         if (count($query->posts) === 1 ) {
+         if (count($query->posts) === 1) {
              return $query->posts[0];
          }
          return false;
