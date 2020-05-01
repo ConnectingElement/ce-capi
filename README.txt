@@ -15,6 +15,9 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.14 =
+* Update the article-exists query to exclude sticky articles from results
+
 = 1.0.13 =
 * Update the endpoint search to include posts that are not in a published state
 

@@ -154,7 +154,8 @@ class ArticleHandler
                     'compare' => '='
                 ]
             ],
-            'post_status' => 'any'
+            'post_status' => 'any',
+            'ignore_sticky_posts' => 1
          ];
          $query = new \WP_Query($args);
          if (count($query->posts) === 1) {
