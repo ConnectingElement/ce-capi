@@ -15,6 +15,10 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.0.15 = 
+* Added category-based multi-premises handling options
+* PHP 7 support has been improved when errors occur
+
 = 1.0.14 =
 * Update the article-exists query to exclude sticky articles from results
 

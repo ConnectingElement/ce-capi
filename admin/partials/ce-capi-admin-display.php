@@ -21,7 +21,7 @@
     <form method="post" name="ce-capi_options" action="options.php">
         <?php 
             settings_fields($this->plugin_name); 
-            $options = get_option($this->plugin_name);
+            $options = get_option($this->plugin_name) ?: [];
         ?>
         
         <table class="form-table">
@@ -35,7 +35,11 @@
                         </label>
                     </th>
                     <td>
-                        <input type="text" id="<?php echo $this->plugin_name; ?>-api_key" name="<?php echo $this->plugin_name; ?>[api_key]" value="<?php print($options['api_key']); ?>"  class="regular-text"/>
+                        <?php 
+                            printf('<input type="text" id="%1$s-api_key" name="%1$s[api_key]" value="%2$s" class="regular-text" />', 
+                                $this->plugin_name, 
+                                array_key_exists('api_key', $options) ? $options['api_key'] : ''); 
+                        ?>
                     </td>
                 </tr>
                 <!-- API secret -->
@@ -47,9 +51,42 @@
                         </label>
                     </th>
                     <td>
-                        <input type="text" id="<?php echo $this->plugin_name; ?>-api_secret" name="<?php echo $this->plugin_name; ?>[api_secret]" value="<?php print($options['api_secret']); ?>"  class="regular-text"/>
+                        <?php 
+                            printf('<input type="text" id="%1$s-api_secret" name="%1$s[api_secret]" value="%2$s" class="regular-text" />', 
+                                $this->plugin_name, 
+                                array_key_exists('api_secret', $options) ? $options['api_secret'] : ''); 
+                        ?>
                     </td>
                 </tr>
+            </tbody>
+        </table>
+
+        <h3>Category/Premises Mapping</h3>
+        <p>If your WordPress site has multiple CAPI premises then you may need to link WordPress Categories to CAPI Premises IDs below. Otherwise leave these fields blank.</p>
+        <table class="form-table">
+            <tbody>
+                <?php
+                    foreach (get_categories(['hide_empty' => false]) as $category) {
+                        $fieldKey = sprintf('%s-category-%s', $this->plugin_name, $category->term_id)
+                        ?>
+                        <tr>
+                            <th scope="row">
+                                <?php printf('<label for="%s"><span>%s</span></label>', $fieldKey, $category->name); ?>
+                            </th>
+                            <td>
+                                <?php 
+                                    printf('<input type="text" id="%s" name="%s[category-%s]" value="%s" class="regular-text"/>', 
+                                        $fieldKey, 
+                                        $this->plugin_name, 
+                                        $category->term_id, 
+                                        array_key_exists('category-' . $category->term_id, $options) ? $options['category-' . $category->term_id] : ''
+                                    );
+                                 ?>
+                            </td>
+                        </tr>
+                        <?php
+                    }
+                ?>
             </tbody>
         </table>
 

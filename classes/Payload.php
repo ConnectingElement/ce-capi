@@ -2,8 +2,7 @@
 
 namespace ContentAPI;
 
-use ContentAPI\Error;
-use ContentAPI\Payload;
+use Exception;
 
 class Payload
 {
@@ -63,7 +62,7 @@ class Payload
         
         if(array_key_exists('errors', $payloadData)){
             foreach ($payloadData['errors'] as $errorData){
-                $payload->addError(Error::fromData($errorData));
+                $payload->addError(\ContentAPI\Error::fromData($errorData));
             }
         }
         if (array_key_Exists('status', $payloadData)){
@@ -86,7 +85,7 @@ class Payload
         return $this;
     }
     
-    public function addError(Error $error)
+    public function addError(\ContentAPI\Error $error)
     {
         $this->errors[] = $error;
         return $this;

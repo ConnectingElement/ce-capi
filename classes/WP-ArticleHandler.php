@@ -4,7 +4,12 @@ namespace ContentAPI;
 
 define('ERROR_HANDLING', 'ERRORS_DATABASE');
 
-class ArticleHandler 
+/**
+ * Class ArticleHandler
+ *
+ * @package ContentAPI
+ */
+class ArticleHandler
 {
     const REFERENCE_META_KEY = '_ce-capi_reference';
     
@@ -55,14 +60,14 @@ class ArticleHandler
         if (!$responsePayload->getErrors()){
             $wpdb->query('START TRANSACTION');
             if (wp_delete_post($payload->data['master']['id'], true) === false) {
-                $responsePayload->addError(new Error(0x25, 'Could not delete article'))->setStatus(500);
+                $responsePayload->addError(new \ContentAPI\Error(0x25, 'Could not delete article'))->setStatus(500);
             }
         }
         
         // delete image
         if (!$responsePayload->getErrors()){
             if (wp_delete_post($payload->data['master']['imageid'], true) === false){
-                $responsePayload->addError(new Error(0x26, 'Could not delete image for article'))->setStatus(500);
+                $responsePayload->addError(new \ContentAPI\Error(0x26, 'Could not delete image for article'))->setStatus(500);
             }
         }
         
@@ -91,6 +96,7 @@ class ArticleHandler
         $ch             = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $response       = curl_exec($ch);
         $responseCode   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
@@ -179,6 +185,29 @@ class ArticleHandler
             'numberposts' => 1
         ]);
     }   
+
+    /**
+     * Retrieves an array of category IDs that match the payload's given premises ID
+     *
+     * @param Payload $payload
+     * @return array
+     */
+    protected function getPostPremisesCategories(Payload $payload)
+    {
+        $postCategories = [];
+        if ($payload->data['premises_id']){
+            $options    = get_option('ce-capi');
+
+            $categories = get_categories(['hide_empty' => false]);
+            foreach($categories as $category) {
+                $fieldKey = 'category-' . $category->term_id;
+                if (array_key_exists($fieldKey, $options) && $options[$fieldKey] && $options[$fieldKey] == $payload->data['premises_id']) {
+                    $postCategories[] = $category->term_id;
+                }
+            }
+        }
+        return $postCategories;
+    }
     
     /**
      * Updates one or more articles at this endpoint
@@ -194,6 +223,9 @@ class ArticleHandler
         
         $this->validatePayload($payload, $responsePayload);
         
+        //assign the category based on the premises_id
+        $postCategories = $this->getPostPremisesCategories($payload);
+
         // update article
         if (!$responsePayload->getErrors()){
             $wpdb->query('START TRANSACTION');
@@ -204,10 +236,11 @@ class ArticleHandler
                 'post_title'    => $payload->data['title'],
                 'post_excerpt'  => $payload->data['snippet'],
                 'post_content'  => $payload->data['content'],
+                'post_category' => $postCategories,
                 'post_status'   => 'publish'
             ]);
             if (!is_int($articleID)){
-                $responsePayload->addError(new Error(0x23, 'Could not update article'))->setStatus(500);
+                $responsePayload->addError(new \ContentAPI\Error(0x23, 'Could not update article'))->setStatus(500);
             }
         }
         
@@ -220,7 +253,7 @@ class ArticleHandler
                 $attachmentData = wp_generate_attachment_metadata($payload->data['master']['imageid'], $filePath);
                 wp_update_attachment_metadata($payload->data['master']['imageid'], $attachmentData);
             } else {
-                $responsePayload->addError(new Error(0x24, 'Could not update image', sprintf('The existing file at %s could not be overwritten', $filename)))->setStatus(500);
+                $responsePayload->addError(new \ContentAPI\Error(0x24, 'Could not update image', sprintf('The existing file at %s could not be overwritten', $filename)))->setStatus(500);
             }
         }
 
@@ -263,7 +296,7 @@ class ArticleHandler
         $articles = static::getArticlesByReference($articleReference);
         if($articles){
             // already exist!
-            $responsePayload->addError(new Error(0x1A, 'Article reference already exists'))->setStatus(400);
+            $responsePayload->addError(new \ContentAPI\Error(0x1A, 'Article reference already exists'))->setStatus(400);
         }
         
         // check seo name
@@ -274,7 +307,7 @@ class ArticleHandler
                 // matching name already exists, alter
                 $seoFriendlyName .= '-' . date('M-y');
                 if ($articles = static::getArticlesBySeoFriendlyName($seoFriendlyName)){
-                    $responsePayload->addError(new Error(0x11, 'Could not assign a new unique seo_friendly_name/slug to article'))->setStatus(500);
+                    $responsePayload->addError(new \ContentAPI\Error(0x11, 'Could not assign a new unique seo_friendly_name/slug to article'))->setStatus(500);
                 }
             }
         }
@@ -284,12 +317,15 @@ class ArticleHandler
             $master = true;
             if ($master){
                 if (array_key_exists('master', $payload->data)){
-                    $responsePayload->addError(new Error(0x07, 'Endpoint is set as master locally, but master data was sent from CAPI'))->setStatus(500);
+                    $responsePayload->addError(new \ContentAPI\Error(0x07, 'Endpoint is set as master locally, but master data was sent from CAPI'))->setStatus(500);
                 }
             } else {
-                $responsePayload->addError(new Error(0x06, 'Wordpress Endpoint must be set as master'))->setStatus(500);
+                $responsePayload->addError(new \ContentAPI\Error(0x06, 'Wordpress Endpoint must be set as master'))->setStatus(500);
             }
         }
+
+        //assign the category based on the premises_id
+        $postCategories = $this->getPostPremisesCategories($payload);
         
         // insert article
         if (!$responsePayload->getErrors()){
@@ -302,6 +338,7 @@ class ArticleHandler
                 'post_title'    => $payload->data['title'],
                 'post_excerpt'  => $payload->data['snippet'],
                 'post_content'  => $payload->data['content'],
+                'post_category' => $postCategories,
                 'post_status'   => 'publish'
             ]);
             $post = get_post($articleID);
@@ -309,10 +346,10 @@ class ArticleHandler
             if (is_int($articleID) || !$post){
                 // add meta
                 if (!add_post_meta($articleID, self::REFERENCE_META_KEY, $articleReference)) {
-                    $responsePayload->addError(new Error(0x12, 'Could not add article', 'Reference meta data could not be added'))->setStatus(500);
+                    $responsePayload->addError(new \ContentAPI\Error(0x12, 'Could not add article', 'Reference meta data could not be added'))->setStatus(500);
                 }
             } else {
-                $responsePayload->addError(new Error(0x12, 'Could not add article'))->setStatus(500);
+                $responsePayload->addError(new \ContentAPI\Error(0x12, 'Could not add article'))->setStatus(500);
             }
         }
         
@@ -321,10 +358,10 @@ class ArticleHandler
             if ($attachmentID = self::addPostImage($articleID, $payload->data['image']['src'])){
                 // assign image to article
                 if (!self::setPostImage($articleID, $attachmentID)){
-                    $responsePayload->addError(new Error(0x15, 'Could not assign image to article', ['articleid' => $articleID, 'attachmentid' => $attachmentID]))->setStatus(500);
+                    $responsePayload->addError(new \ContentAPI\Error(0x15, 'Could not assign image to article', ['articleid' => $articleID, 'attachmentid' => $attachmentID]))->setStatus(500);
                 }
             } else {
-                $responsePayload->addError(new Error(0x14, 'Could not insert image for article'))->setStatus(500);
+                $responsePayload->addError(new \ContentAPI\Error(0x14, 'Could not insert image for article'))->setStatus(500);
             }
         }
 
@@ -389,7 +426,7 @@ class ArticleHandler
     {
         // check data given
         if (!array_key_exists('master', $payload->data)){
-            $responsePayload->addError(new Error(0x1F, 'Method was patch but master data was not passed'))->setStatus(400);
+            $responsePayload->addError(new \ContentAPI\Error(0x1F, 'Method was patch but master data was not passed'))->setStatus(400);
         }
         
         if (!$responsePayload->getErrors()){
@@ -402,38 +439,37 @@ class ArticleHandler
                 $articleByReference = static::getArticlesByReference($articleReference);
                 if ($articleByReference && is_a($articleByReference, 'WP_Post')){
                     if ($articleByReference->ID !== $article->ID){
-                        $responsePayload->addError(new Error(0x1E, sprintf('Article id (%s) and reference %s (%s) did not match', $articleID, $articleReference, $articleByReference->ID)))->setStatus(400);
+                        $responsePayload->addError(new \ContentAPI\Error(0x1E, sprintf('Article id (%s) and reference %s (%s) did not match', $articleID, $articleReference, $articleByReference->ID)))->setStatus(400);
                     }
                 } else {
                     // does not exist
-                    $responsePayload->addError(new Error(0x1C, 'Article with reference ' . $articleReference . ' could not be found'))->setStatus(400);
+                    $responsePayload->addError(new \ContentAPI\Error(0x1C, 'Article with reference ' . $articleReference . ' could not be found'))->setStatus(400);
                 }
             } else {
                 // id not found
                 $article = false;
-                $responsePayload->addError(new Error(0x1D, 'Article with id ' . $articleID . ' could not be found'))->setStatus(400);
+                $responsePayload->addError(new \ContentAPI\Error(0x1D, 'Article with id ' . $articleID . ' could not be found'))->setStatus(400);
             }
 
             // image
             if (array_key_exists('imageid', $payload->data['master'])){
                 $image = get_post($payload->data['master']['imageid']);
                 if (!$image || !is_a($image, 'WP_Post')){
-                    $responsePayload->addError(new Error(0x21, 'No data was found with a matching master key', 'image with id ' . $payload->data['master']['imageid']))->setStatus(400);
+                    $responsePayload->addError(new \ContentAPI\Error(0x21, 'No data was found with a matching master key', 'image with id ' . $payload->data['master']['imageid']))->setStatus(400);
                 }
             } else {
                 // image not found
                 $image = false;
-                $responsePayload->addError(new Error(0x20, 'A required master data key was missing', 'imageid'))->setStatus(400);
+                $responsePayload->addError(new \ContentAPI\Error(0x20, 'A required master data key was missing', 'imageid'))->setStatus(400);
             }
 
             // assocation
             if ($article && $image) {
                 if ($image->post_parent !== $article->ID) {
                     $info = sprintf('Parent post of given image (with post->id %s) was %s and so did not match the post id of the article (%s)', $image->ID, $image->post_parent, $article->ID);
-                    $responsePayload->addError(new Error(0x22, 'A synchronisation issue was detected', $info))->setStatus(400);
+                    $responsePayload->addError(new \ContentAPI\Error(0x22, 'A synchronisation issue was detected', $info))->setStatus(400);
                 }
             }
         }
     }
 }
-?>

@@ -58,7 +58,7 @@ class Message
         $message->status = $data['status'];
         $message->success = $data['success'];
         foreach ($data['errors'] as $error){
-            $message->addError(new Error($error['code'], $error['description'], $error['information']));
+            $message->addError(new \ContentAPI\Error($error['code'], $error['description'], $error['information']));
         }
         foreach ($data['payloads'] as $payloadData){
             $message->addPayload(Payload::fromData($payloadData));
@@ -67,7 +67,7 @@ class Message
         return $message;
     }
     
-    public function addError(Error $error)
+    public function addError(\ContentAPI\Error $error)
     {
         $this->errors[] = $error;
         return $this;
@@ -186,11 +186,11 @@ class Message
     {
         $errorOccurred = false;
         if ($this->key !== $key){
-            $response->addError(new Error(0x04, 'The message API key was incorrect'))->setStatus(400);
+            $response->addError(new \ContentAPI\Error(0x04, 'The message API key was incorrect'))->setStatus(400);
             $errorOccurred = true;
         }
         if (!hash_equals($this->getDigest($secret), $this->digest)){
-            $response->addError(new Error(0x05, 'The message digest did not validate'))->setStatus(400);
+            $response->addError(new \ContentAPI\Error(0x05, 'The message digest did not validate'))->setStatus(400);
             $errorOccurred = true;
         }
         if (!$errorOccurred){

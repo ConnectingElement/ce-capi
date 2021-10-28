@@ -39,7 +39,7 @@ function finish()
 {
     global $response,$options;
     if ($error = error_get_last()){
-        $response->addError(new Error(0x00, sprintf('A fatal error occurred at the end point: %s - %s at line %s of %s', $error['type'], $error['message'], $error['line'], $error['file'])))->setStatus(500);
+        $response->addError(new \ContentAPI\Error(0x00, sprintf('A fatal error occurred at the end point: %s - %s at line %s of %s', $error['type'], $error['message'], $error['line'], $error['file'])))->setStatus(500);
     }
     $output = json_encode($response->getMessage($options['api_key'], $options['api_secret']));
     error_log('sending response: ' . $output);
@@ -53,7 +53,7 @@ register_shutdown_function('ContentAPI\finish'); // make sure we output a proper
 $response = Message::respond();
 
 if (!isset($options['api_key']) || !isset($options['api_secret'])){
-    $response->addError(new Error(0x06, 'A required endpoint setting is not defined'));
+    $response->addError(new \ContentAPI\Error(0x06, 'A required endpoint setting is not defined'));
 }
 
 if ($_POST || file_get_contents("php://input")){
@@ -72,7 +72,7 @@ if ($_POST || file_get_contents("php://input")){
                             $class = new ArticleHandler;
                             break;
                         default:
-                            $response->addPayload($payload->makeResponse()->addError(new Error(0x01, 'Unknown module ' . $payload->module))->setStatus(400));
+                            $response->addPayload($payload->makeResponse()->addError(new \ContentAPI\Error(0x01, 'Unknown module ' . $payload->module))->setStatus(400));
                             continue 2;
                     }
 
@@ -84,19 +84,19 @@ if ($_POST || file_get_contents("php://input")){
                             $class->{$payload->action}($payload, $response);
                             break;
                         default:
-                            $response->addPayload($payload->makeResponse()->addError(new Error(0x02, 'Unknown action ' . $payload->action))->setStatus(400));
+                            $response->addPayload($payload->makeResponse()->addError(new \ContentAPI\Error(0x02, 'Unknown action ' . $payload->action))->setStatus(400));
                             continue 2;
                     }
                 }
             } else {
-                $response->addError(new Error(0x09, 'No payloads provided'))->setStatus(400);
+                $response->addError(new \ContentAPI\Error(0x09, 'No payloads provided'))->setStatus(400);
             }
         }
         //logError('Generated response: ' . var_export($response, true));
     } catch (\Exception $e){
-        $response->addError(new Error(0x00, $e->getMessage()))->setStatus(500);
+        $response->addError(new \ContentAPI\Error(0x00, $e->getMessage()))->setStatus(500);
     }
 } else {
-    $response->addError(new Error(0x03, 'Bad method; expected POST'))->setStatus(405);
+    $response->addError(new \ContentAPI\Error(0x03, 'Bad method; expected POST'))->setStatus(405);
 }
 ?>

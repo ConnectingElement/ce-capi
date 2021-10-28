@@ -24,6 +24,6 @@ class Error
             }
         }
         
-        return new Error($errorData['code'], $errorData['description'], $errorData['information']);
+        return new self($errorData['code'], $errorData['description'], $errorData['information']);
     }
 }

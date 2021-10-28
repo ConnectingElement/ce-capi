@@ -173,10 +173,15 @@ class CE_CAPI_Admin {
      * @return array
      */
     public function validate($input) { 
-        return [
-            'api_key'       => sanitize_text_field($input['api_key']),
-            'api_secret'    => sanitize_text_field($input['api_secret']),
-        ];
+        $data = [];
+        foreach($input as $key => $value) {
+            if ($key === 'api_key' || $key === 'api_secret') {
+                $data[$key] = sanitize_text_field($value);
+            } elseif (strpos($key, 'category-') === 0 && is_numeric($value)) {
+                $data[$key] = $value;
+            }
+        }
+        return $data;
     }
 
 }
